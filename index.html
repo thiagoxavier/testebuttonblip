@@ -1,27 +1,183 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>Page Title</title>
+    <title>Page Title</title>
 </head>
 <body>
-
-<h1>This is a Heading</h1>
-<p>This is a paragraph.</p>
-
+    <h1>This is a Heading</h1>
+    <p>This is a paragraph.</p>
 </body>
 </html>
 
-<script src="https://unpkg.com/blip-chat-widget" type="text/javascript">
-</script>
+<button class="blip-chat-start bn br2 ph5 f6 mb2">tes</button>
 <script>
+    var dataLayer = [];
     (function () {
-        window.onload = function () {
-            new BlipChat()
-            .withAppKey('c2VydmljZWRlc2sxMTo4NzA4OWY4YS04MDY0LTRmNjQtOTMxMi02NDUwY2IyNzIyYjI=')
-            .withButton({"color":"#005B9E","icon":"https://blipmediastore.blob.core.windows.net/public-medias/Media_772f8cb9-64f4-4e9f-a5c2-a5019f0b34dc"})
-            .withCustomCommonUrl('https://unidas.chat.blip.ai/')
-            .build();
+        let optIn = false;
+        let intervalMonitor = undefined;
+
+        function closeOptInPopUp() {
+            if ($('#chat-popup').length > 0) {
+                setTimeout(function () {
+                    $('#chat-popup').fadeOut("slow");
+                }, 100);
+
+            }
         }
+
+        function showOptInPopUp() {
+            if ($('#chat-popup').length > 0 && optIn == false) {
+                setTimeout(function () {
+                    $('#chat-popup').fadeIn("slow");
+                }, 200);
+            }
+        }
+
+        function resizePopup(popup, iframe) {
+            const iframeBottom = parseFloat(iframe.css('bottom').replace('px', ''));
+            const iframeHeight = parseFloat(iframe.css('height').replace('px', ''));
+            popup.css({
+                position: 'fixed',
+                bottom: `${iframeBottom - 34}px`,
+                right: iframe.css('right'),
+                width: iframe.css('width'),
+                height: `${iframeHeight - 20}px`,
+            });
+
+            if (iframeBottom <= 0) {
+                popup.css({
+                    position: 'absolute'
+                });
+            }
+            console.log(`popup offset: ${popup.css('top')} - ${popup.css('left')}`);
+            console.log(`iframe offset: ${iframe.css('top')} - ${iframe.css('left')}`);
+        }
+
+        function createOptInPopUp() {
+            if ($('#veiculoId').length) {
+                const veiculoID = $('#veiculoId').val();
+                const veiculoDescricao = $('.veiculo-subtitulo').text();
+                const container = $('#blip-chat-container');
+                const iframe = $('#blip-chat-iframe');
+
+                iframe.ready(function () {
+                    setTimeout(function () {
+                        const popup = $(`<div id="chat-popup"><div>`);
+
+                        const bubble = $(`<div>Clique aqui para iniciar a conversa</div>`);
+                        bubble.css({
+                            'border-radius': '13px 13px 13px 2px',
+                            'box-shadow': '0 -1px 12px 0 rgba(0,0,0,.1)',
+                            color: '#738192',
+                            background: '#fff',
+                            padding: '10px 16px',
+                            margin: '15px 0 10px 0'
+                        });
+
+                        let picture = $('.veiculo-fotos ul li[aria-hidden=false] img').first();
+                        if (picture.length == 0) {
+                            picture = $('#fotos-veiculo-mobile .owl-item.active img').first();
+                        }
+
+                        if (picture.length > 0) {
+                            console.log(picture);
+                            picture.css({ 'margin-bottom': '5px', 'border-radius': 'inherit' });
+                            bubble.prepend(picture);
+                        }
+
+                        popup.append(bubble);
+                        const button = $(`<span></span>`);
+                        button.css({
+
+                            'cursor': 'pointer',
+                            'display': 'inline-block',
+                            'background-color': '#fbd2d3',
+                            'border': '1px solid #e8282f',
+                            '-webkit-box-shadow': '0 -1px 12px 0 rgba(0,0,0,.1)',
+                            'box-shadow': '0 -1px 12px 0 rgba(0,0,0,.1)',
+                            'border-radius': '19px',
+                            'padding': '10px 16px',
+                            'margin': '2px',
+                            'color': '#e8282f',
+                            'font-size': '16px',
+                            'min-width': '100px',
+                            'margin-right': '10px',
+                            "text-align": "center"
+                        });
+
+                        const yes = button.clone().text('Sim')
+                            .click(function () {
+                                const message = `Sim, gostaria de mais informações sobre o veículo #${veiculoID} - ${veiculoDescricao}!`;
+
+                                blipChat.sendMessage({
+                                    "type": "text/plain",
+                                    "content": message
+                                });
+
+
+                                optIn = true;
+                                closeOptInPopUp();
+                            });
+
+                        const no = button.clone().text('Não')
+                            .click(function () {
+                                optIn = true;
+                                closeOptInPopUp();
+                            });
+
+                        const buttonContainer = $('<div></div>');
+                        buttonContainer.append(yes);
+                        buttonContainer.append(no);
+                        popup.append(buttonContainer);
+                        popup.css({
+                            position: 'fixed',
+                            'z-index': 1,
+                            background: '#FAF9F8',
+                            padding: '0 50px 0px 30px',
+                            border: '1px solid #fff',
+                            'border-radius': '0 0 5px 5px',
+                            display: 'none'
+                        });
+
+                        resizePopup(popup, iframe);
+                        $(window).resize(function () { resizePopup(popup, iframe); });
+                        container.append(popup);
+                        popup.fadeIn("slow");
+
+                    }, 200);
+                });
+            }
+        }
+
+        const blipChat = new BlipChat();
+        blipChat.withAppKey('c2VydmljZWRlc2sxMTo4NzA4OWY4YS04MDY0LTRmNjQtOTMxMi02NDUwY2IyNzIyYjI=');
+        blipChat.withButton({ "color": "#ed1c24", "icon": "https://s3-sa-east-1.amazonaws.com/msging.net/Services/Images/441d4148-6099-4b40-b035-1c5e0990b862" });
+        blipChat.withCustomCommonUrl('https://chat.blip.ai');
+        blipChat.withEventHandler(BlipChat.ENTER_EVENT, function () {
+            dataLayer.push({ 'event': 'BlipEventEnter' });
+            showOptInPopUp();
+
+        });
+        blipChat.withEventHandler(BlipChat.LEAVE_EVENT, function () {
+            dataLayer.push({ 'event': 'BlipEventLeave' });
+            if (intervalMonitor) {
+                clearInterval(intervalMonitor);
+                console.log('clearInterval::intervalMonitor');
+            }
+            closeOptInPopUp();
+        });
+        blipChat.withEventHandler(BlipChat.LOAD_EVENT, function () {
+            dataLayer.push({ 'event': 'BlipEventLoad' });
+            createOptInPopUp();
+        });
+        blipChat.withEventHandler(BlipChat.CREATE_ACCOUNT_EVENT, function () {
+            dataLayer.push({ 'event': 'BlipEventCreateAccount' });
+
+        });
+        blipChat.build();
+
     })();
+
+
 </script>
-                                                      
