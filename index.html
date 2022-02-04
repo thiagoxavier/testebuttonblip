@@ -1,199 +1,274 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>BlipChat widget</title>
+  </head>
 
-<head>
-    <title>Page Title</title>
-</head>
+  <body>
+    <script
+      src="https://unpkg.com/blip-chat-widget@1.5.2"
+      type="text/javascript"
+    ></script>
+    <div class="container">
+      <div class="column">
+        <div class="row">
+          <h1>BlipChat Sandbox</h1>
+          <p>Set your environment and app key</p>
 
-<body>
+          <label for="app-key">App Key:</label>
+          <input type="text" id="app-key" name="app-key" />
 
-    <h1>This is a Heading</h1>
-    <p>This is a paragraph.</p>
+          <label for="environment">Environment:</label>
+          <input
+            type="text"
+            id="environment"
+            name="environment"
+            value="production"
+          />
 
-</body>
+          <p>Use buttons bellow to see different behaviours of BLiP Chat</p>
 
+          <button onclick="buildChat({authType:BlipChat.GUEST_AUTH})">
+            Build SDK as GUEST (Default)
+          </button>
+          <button onclick="buildChat({authType:BlipChat.DEV_AUTH})">
+            Build SDK as DEV
+          </button>
+          <button onclick="changeSDK()">Change SDK Template</button>
+          <button onclick="toogleChat()">Toogle open chat</button>
+          <button onclick="destroyChat()">Destroy SDK</button>
+        </div>
+
+        <div class="row">
+          <label for="test-message">Write bellow your test message:</label>
+          <textarea
+            id="test-message"
+            style="width: 100%; height: 100px;"
+          ></textarea>
+          <button onclick="sendMessage()">Send test message</button>
+
+          <br />
+
+          <label for="test-command">Write bellow your test command:</label>
+          <textarea
+            id="test-command"
+            style="width: 100%; height: 100px;"
+          ></textarea>
+          <button onclick="sendCommand()">Send test command</button>
+        </div>
+
+        <div class="row">
+          <h1>For authentication type DEV</h1>
+          <p>
+            Enter the name and email of the client (We will create a random
+            identifier and password for them)
+          </p>
+
+          <form>
+            Full Name: <input type="text" id="fullName" /> <br />
+            Email: <input type="text" id="email" /> <br />
+            Id: <input type="text" id="userId" value="testdevuser" /> <br />
+            Password: <input type="text" id="userPass" value="123456" /> <br />
+          </form>
+        </div>
+
+        <div class="row">
+          <h1>For connection data tests (*optional)</h1>
+          <p>
+            Enter with port, hostName and domain informations for BLiP
+            connection
+          </p>
+
+          <form>
+            Domain: <input type="text" id="domain" value="0mn.io" /> <br />
+            HostName: <input type="text" id="hostName" value="hmg-ws.0mn.io" />
+            <br />
+            Port: <input type="text" id="port" value="443" />
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="sdk-target" style="height:550px; width: 50%"></div>
+
+    <script>
+      var sendMessage
+      var destroyChat
+      var buildChat
+
+      var target
+      var builder
+      ;(function() {
+        window.onload = function() {
+          toogleChat = function() {
+            builder.toogleChat()
+          }
+
+          sendMessage = function() {
+            let msgFieldValue
+            try {
+              msgFieldValue = JSON.parse(
+                document.getElementById('test-message').value
+              )
+            } catch (error) {
+              msgFieldValue = document.getElementById('test-message').value
+            }
+            builder.sendMessage(msgFieldValue)
+          }
+
+          sendCommand = function() {
+            try {
+              const command = JSON.parse(
+                document.getElementById('test-command').value
+              )
+              builder.sendCommand(command)
+            } catch (error) {
+              alert('Comando invalido')
+            }
+          }
+
+          destroyChat = function() {
+            builder.destroy()
+            builder = null
+          }
+
+          buildChat = function(authConfig) {
+            if (builder) {
+              destroyChat()
+            }
+
+            if (authConfig && authConfig.authType == BlipChat.DEV_AUTH) {
+              ;(authConfig.userIdentity = document.getElementById('userId')
+                .value
+                ? document.getElementById('userId').value
+                : '01684334-71c7-40e0-ad1a-5ce372de1a08'), // Required
+                (authConfig.userPassword = document.getElementById('userPass')
+                  .value
+                  ? document.getElementById('userPass').value
+                  : 'MjU2OWNmOTItYmRjZi00Njg0LTljZDktMWQxNjQxYmYxMGU1'), // Required
+                (authConfig.userName = document.getElementById('fullName').value
+                  ? document.getElementById('fullName').value
+                  : ''), // Optional
+                (authConfig.userEmail = document.getElementById('email').value
+                  ? document.getElementById('email').value
+                  : '') // Optional
+            }
+
+            const environment = document.getElementById('environment').value
+              ? document.getElementById('environment').value
+              : 'homolog'
+            const appKey =
+              document.getElementById('app-key').value ||
+              'c2VydmljZWRlc2sxMTp0VzVYRkpmOGhIbVpCSjZjdTdGMg=='
+            const connectionData = {
+              port: document.getElementById('port').value,
+              hostName: document.getElementById('hostName').value,
+              domain: document.getElementById('domain').value
+            }
+
+            const customStyle = `
+            body {
+              background: transparent;
+            }
+            #blip-chat-welcome-container {
+              background-color: transparent;
+            }
+            #blip-chat-welcome-container ~ #message-input {
+              display: none;
+            }
+            #blip-chat-header {
+              display: none;
+            }
+            #app {
+              padding-top: 0;
+              height: 100%;
+              background-color: transparent !important;
+            }
+            .blip-container {
+              margin-bottom: 0;
+            }
+            .blip-card-container, .blip-card .bubble {
+              font-size: 12px;
+            }
+            #message-input {
+              box-sizing: border-box;
+              border: 1px solid #0CC8CC;
+              border-radius: 6px;
+              background: #252B39;
+            }
+            #message-input textarea {
+              background: #252B39;
+              font-size: 12px;
+              color: white;
+            }
+            #message-input .message-options {
+              display: none;
+            }
+          `
+
+            builder = new BlipChat()
+              .withAppKey(appKey)
+              .withButton({
+                color: '#2f8413'
+              })
+              .withTarget(target)
+              .withEnvironment(environment)
+              .withConnectionData(connectionData)
+              .withAuth(authConfig)
+              .withAccount({
+                fullName: 'User name',
+                phoneNumber: '+15055034455',
+                email: 'test@test.com',
+                encryptMessageContent: true
+              })
+              .withCustomStyle(customStyle)
+              .withEventHandler(BlipChat.ENTER_EVENT, function() {
+                console.log('enter')
+              })
+              .withEventHandler(BlipChat.LEAVE_EVENT, function() {
+                console.log('leave')
+              })
+              .withEventHandler(BlipChat.LOAD_EVENT, function() {
+                console.log('chat loaded')
+              })
+              .withEventHandler(BlipChat.CREATE_ACCOUNT_EVENT, function() {
+                console.log('account created')
+              })
+              .withCustomMessageMetadata({
+                x: 'y'
+              })
+              .withCustomCommonUrl(
+                ''
+              )
+            builder.build()
+          }
+
+          changeSDK = function() {
+            if (target) {
+              target = null
+            } else {
+              target = 'sdk-target'
+            }
+
+            buildChat()
+          }
+
+          applyValues = function() {
+            options.window.title = document.getElementById('title').value
+            options.window.iconPath = document.getElementById('iconPath').value
+            options.window.widgetColor = document.getElementById(
+              'widgetColor'
+            ).value
+            options.window.hideMenu = !document.getElementsByName('hideMenu')[1]
+              .checked
+
+            buildChat(options.config.authType)
+          }
+          buildChat()
+        }
+      })()
+    </script>
+  </body>
 </html>
-<script src="https://unpkg.com/blip-chat-widget" type="text/javascript"></script>
-<script>
-	var dataLayer = [];
-	(function () {
-		let optIn = false;
-		let intervalMonitor = undefined;
-
-		function closeOptInPopUp() {
-			if ($('#chat-popup').length > 0) {
-				setTimeout(function () {
-					$('#chat-popup').fadeOut("slow");
-				}, 100);
-
-			}
-		}
-
-		function showOptInPopUp() {
-			if ($('#chat-popup').length > 0 && optIn == false) {
-				setTimeout(function () {
-					$('#chat-popup').fadeIn("slow");
-				}, 200);
-
-			}
-		}
-
-		function resizePopup(popup, iframe) {
-
-			const iframeBottom = parseFloat(iframe.css('bottom').replace('px', ''));
-			const iframeHeight = parseFloat(iframe.css('height').replace('px', ''));
-
-			popup.css({
-				position: 'fixed',
-				bottom: `${iframeBottom - 34}px`,
-				right: iframe.css('right'),
-				width: iframe.css('width'),
-				height: `${iframeHeight - 20}px`,
-			});
-
-			if (iframeBottom <= 0) {
-				popup.css({
-					position: 'absolute'
-				});
-			}
-
-			console.log(`popup offset: ${popup.css('top')} - ${popup.css('left')}`);
-			console.log(`iframe offset: ${iframe.css('top')} - ${iframe.css('left')}`);
-
-		}
-
-		function createOptInPopUp() {
-
-			if ($('#veiculoId').length) {
-				const veiculoID = $('#veiculoId').val();
-				const veiculoDescricao = $('.veiculo-subtitulo').text();
-
-				const container = $('#blip-chat-container');
-				const iframe = $('#blip-chat-iframe');
-				iframe.ready(function () {
-					setTimeout(function () {
-						const popup = $(`<div id="chat-popup"><div>`);
-
-						const bubble = $(`<div>Deseja atendimento para o veículo ${veiculoDescricao}?</div>`);
-						bubble.css({
-							'border-radius': '13px 13px 13px 2px',
-							'box-shadow': '0 -1px 12px 0 rgba(0,0,0,.1)',
-							color: '#738192',
-							background: '#fff',
-							padding: '10px 16px',
-							margin: '15px 0 10px 0'
-						});
-
-						let picture = $('.veiculo-fotos ul li[aria-hidden=false] img').first();
-
-						if (picture.length == 0) {
-							picture = $('#fotos-veiculo-mobile .owl-item.active img').first();
-						}
-						if (picture.length > 0) {
-							console.log(picture);
-							picture.css({ 'margin-bottom': '5px', 'border-radius': 'inherit' });
-							bubble.prepend(picture);
-						}
-
-						popup.append(bubble);
-
-						const button = $(`<span></span>`);
-						button.css({
-
-							'cursor': 'pointer',
-							'display': 'inline-block',
-							'background-color': '#fbd2d3',
-							'border': '1px solid #e8282f',
-							'-webkit-box-shadow': '0 -1px 12px 0 rgba(0,0,0,.1)',
-							'box-shadow': '0 -1px 12px 0 rgba(0,0,0,.1)',
-							'border-radius': '19px',
-							'padding': '10px 16px',
-							'margin': '2px',
-							'color': '#e8282f',
-							'font-size': '16px',
-							'min-width': '100px',
-							'margin-right': '10px',
-							"text-align": "center"
-						});
-
-						const yes = button.clone().text('Sim')
-							.click(function () {
-								const message = `Sim, gostaria de mais informações sobre o veículo #${veiculoID} - ${veiculoDescricao}!`;
-
-								blipChat.sendMessage({
-									"type": "text/plain",
-									"content": message
-								});
-
-
-								optIn = true;
-								closeOptInPopUp();
-							});
-
-						const no = button.clone().text('Não')
-							.click(function () {
-								optIn = true;
-								closeOptInPopUp();
-							});
-
-						const buttonContainer = $('<div></div>');
-						buttonContainer.append(yes);
-						buttonContainer.append(no);
-						popup.append(buttonContainer);
-						popup.css({
-							position: 'fixed',
-							'z-index': 1,
-							background: '#FAF9F8',
-							padding: '0 50px 0px 30px',
-							border: '1px solid #fff',
-							'border-radius': '0 0 5px 5px',
-							display: 'none'
-						});
-
-						resizePopup(popup, iframe);
-
-						$(window).resize(function () { resizePopup(popup, iframe); });
-
-						// intervalMonitor = setInterval(() => {
-						// 	resizePopup(popup, iframe);
-						// }, 100);
-
-						container.append(popup);
-						popup.fadeIn("slow");
-
-					}, 200);
-				});
-			}
-		}
-
-		const blipChat = new BlipChat();
-		blipChat.withAppKey('c2VydmljZWRlc2sxMTo4NzA4OWY4YS04MDY0LTRmNjQtOTMxMi02NDUwY2IyNzIyYjI=');
-		blipChat.withButton({ "color": "#ed1c24", "icon": "https://s3-sa-east-1.amazonaws.com/msging.net/Services/Images/441d4148-6099-4b40-b035-1c5e0990b862" });
-		blipChat.withCustomCommonUrl('https://chat.blip.ai');
-		blipChat.withEventHandler(BlipChat.ENTER_EVENT, function () {
-			dataLayer.push({ 'event': 'BlipEventEnter' });
-			showOptInPopUp();
-
-		});
-		blipChat.withEventHandler(BlipChat.LEAVE_EVENT, function () {
-			dataLayer.push({ 'event': 'BlipEventLeave' });
-			if (intervalMonitor) {
-				clearInterval(intervalMonitor);
-				console.log('clearInterval::intervalMonitor');
-			}
-			closeOptInPopUp();
-		});
-		blipChat.withEventHandler(BlipChat.LOAD_EVENT, function () {
-			dataLayer.push({ 'event': 'BlipEventLoad' });
-			createOptInPopUp();
-		});
-		blipChat.withEventHandler(BlipChat.CREATE_ACCOUNT_EVENT, function () {
-			dataLayer.push({ 'event': 'BlipEventCreateAccount' });
-
-		});
-		blipChat.build();
-
-	})();
-
-
-</script>
